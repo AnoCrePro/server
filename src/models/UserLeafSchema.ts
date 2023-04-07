@@ -7,8 +7,8 @@ export interface IUserLeaf extends Document {
   timestamp: string;
   hash: string;
   public_key: string;
-  parent: number;
-  type: number
+  parent: string;
+  level: number
 }
 
 const UserLeafSchema: Schema = new Schema({
@@ -18,8 +18,8 @@ const UserLeafSchema: Schema = new Schema({
   timestamp: {type: String, require:true},
   hash: {type: String, require: true},
   public_key: {type: String, require: true},
-  parent: {type: Number, require:true},
-  type: {type: Number, require:true},
+  parent: {type: String, require:true},
+  level: {type: Number, require:true},
 }, {collection: 'merkletree', versionKey: false})
 
 export default model<IUserLeaf>("UserLeaf", UserLeafSchema)

@@ -1,7 +1,7 @@
 
 import * as dotenv from "dotenv"
 import { connectMongoDB } from "./connect"
-import { userRouter } from "./src/routes/userRouter"
+import { userRouter } from "./src/routes/centicUserRouter"
 
 const express = require("express")
 const cors = require("cors")
@@ -12,7 +12,7 @@ const port = process.env.PORT
 
 app.use(json())
 app.use(cors())
-app.use("/user", userRouter)
+app.use("/centic/user", userRouter)
 
 app.get("/", async(req: any, res: any) => {
   res.send("AnoCrePro")
