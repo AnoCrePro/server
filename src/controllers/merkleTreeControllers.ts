@@ -1,9 +1,10 @@
-import UserLeaf, { IUserLeaf } from "../models/UserLeafSchema";
+import UserCached, { IUserCached } from "../models/UserCachedSchema";
+import CenticUser, { ICenticUser } from "../models/CenticUserSchema"
 import * as dotenv from "dotenv";
 dotenv.config();
 
-async function test(): Promise<number> {
-  return await UserLeaf.count({})
-}
+// async function provideHash(req: Request) {
 
-export {test}
+// }
+
+// export {test}
