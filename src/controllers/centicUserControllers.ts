@@ -2,6 +2,7 @@ import UserCached, { IUserCached } from "../models/UserCachedSchema";
 import { Request } from "express";
 import CenticUser, { ICenticUser } from "../models/CenticUserSchema";
 import OtherNode, { IOtherNode } from "../models/OtherNodeSchema";
+import MerkleTree, { IMerkleTree } from "../models/MerkleTreeSchema"
 import { uuid } from "uuidv4"
 import * as dotenv from "dotenv";
 import UserLeaf, { IUserLeaf } from "../models/UserLeafSchema";
@@ -18,10 +19,15 @@ async function getNumberOfUserLeaf() {
   return await UserLeaf.count({})
 }
 
+async function getNumberOfMerkleTreeInfo() {
+  return await MerkleTree.count({})
+}
+
 async function hashData(left: string, right: string){
   var mimc = await mimc7()
   return toHexString(mimc.multiHash([left, right], 0))
 }
+
 
 async function register (req: Request) {
   var data: any = req.body
@@ -82,12 +88,15 @@ async function convertCachedToLeaf() {
       console.log("User Leaf " + data.public_key + " is existed!")
     }
   })
-
+  var msg = await buildMerkleTree()
   await UserCached.deleteMany({})
+
+  return msg
 }
 
 async function buildMerkleTree() {
   var user_leaf_data = await UserLeaf.find({level: 1}).sort({_id: "ascending"})
+  var cur_merkle_tree_number = await getNumberOfMerkleTreeInfo()
   if(user_leaf_data.length > 0) {
     var hashes = user_leaf_data.map(x => x)
     var level = 1
@@ -157,6 +166,24 @@ async function buildMerkleTree() {
       }
 
       hashes = childArray.map(x => x)
+    }
+    // Update Merkle Tree Info 
+    var curMerkleTree: IMerkleTree | null = await MerkleTree.findOne({_id: cur_merkle_tree_number})
+    if(curMerkleTree == null || curMerkleTree.root != hashes[0].hash) {
+      let newMerkleTreeData = {
+        _id: cur_merkle_tree_number + 1,
+        root: hashes[0].hash,
+        level: hashes[0].level,
+        number_of_leaf: user_leaf_data.length,
+        timestamp: Math.round(Date.now() / 1000).toString()
+      }
+
+      var newMerkleTree = new MerkleTree(newMerkleTreeData)
+
+      await newMerkleTree.save()
+      console.log("Build new merkle tree successfully")
+    } else {
+      throw Error("Merkle Tree: Root hash doesn't change!")
     }
     return hashes[0].hash
   } else {
