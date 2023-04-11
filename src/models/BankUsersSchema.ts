@@ -5,6 +5,7 @@ export interface IBankUser extends Document {
   age: number;
   address: string;
   public_key: string;
+  timestamp: string;
   proof: object;
 }
 
@@ -13,6 +14,7 @@ const BankUserSchema: Schema = new Schema({
   age: {type: Number, require: true},
   address: {type: String, require: true},
   public_key: {type: String, require: true},
+  timestamp: {type: String, require: true},
   proof: {type: Object, require: true},
 }, {collection: 'bankusers', versionKey: false})
 

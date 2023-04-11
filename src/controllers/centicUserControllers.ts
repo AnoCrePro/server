@@ -16,7 +16,8 @@ async function getNumberOfUserCached() {
 }
 
 async function getNumberOfUserLeaf() {
-  return await UserLeaf.count({})
+  var data: any = await UserLeaf.find({level: 1})
+  return data.length
 }
 
 async function getNumberOfMerkleTreeInfo() {
@@ -232,4 +233,48 @@ async function provideAuthHash(req: Request) {
   }
 }
 
-export {register, provideAuthHash, convertCachedToLeaf, buildMerkleTree}
+async function getInfo(req: Request){
+  var data: any = req.body
+  var public_key: string = data.public_key
+  var siblings: string [] = []
+  var credit_score: number = 0
+  var timestamp: string = ""
+
+  var userLeafCheck: IUserLeaf | null = await UserLeaf.findOne({public_key: public_key})
+  if(userLeafCheck != null) {
+    credit_score = userLeafCheck.credit_score
+    timestamp = userLeafCheck.timestamp
+
+    var curNode: IUserLeaf | IOtherNode = userLeafCheck
+    while(curNode.parent != "") {
+      var siblingsNodeList: IOtherNode[] | null = await OtherNode.find({parent: curNode.parent})
+      if(siblingsNodeList.length == 1) {
+        siblings.push(curNode.hash) 
+      } else {
+        for(let i = 0; i < siblingsNodeList.length; ++i) {
+          if(siblingsNodeList[i].hash != curNode.hash) {
+            siblings.push(siblingsNodeList[i].hash)
+          }
+        }
+      }
+      
+      var nextNode: IOtherNode | null = await OtherNode.findOne({_id: curNode.parent})
+      if(nextNode != null) {
+        curNode = nextNode
+      } else {
+        throw Error("Get User Leaf Info: Find Next Node Fail !")
+      }
+    }
+    return {
+      credit_score: credit_score,
+      timestamp: timestamp,
+      siblings: siblings
+    }
+  }
+  else {
+    throw Error("Get User Leaf Info: Fail!")
+    return {}
+  }
+}
+
+export {register, provideAuthHash, convertCachedToLeaf, buildMerkleTree, getInfo}
