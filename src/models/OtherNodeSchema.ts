@@ -4,7 +4,8 @@ export interface IOtherNode extends Document {
   _id: string;
   hash: string;
   parent: string;
-  level: number
+  level: number;
+  position: number
 }
 
 const OtherNodeSchema: Schema = new Schema({
@@ -12,6 +13,7 @@ const OtherNodeSchema: Schema = new Schema({
   hash: {type: String, require: true},
   parent: {type: String, require:true},
   level: {type: Number, require:true},
+  position: {type: Number, require:true},
 }, {collection: 'merkletree', versionKey: false})
 
 export default model<IOtherNode>("OtherNode", OtherNodeSchema)

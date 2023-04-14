@@ -70,6 +70,7 @@ async function convertCachedToLeaf() {
     var userLeafCheck: IUserLeaf | null = await UserLeaf.findOne({public_key: data.public_key})
     if( userLeafCheck == null ) {
       try {
+        let position = (user_leaf_num + 1) % 2 == 0 ? 1 : 0
         var newUserLeaf = new UserLeaf({
           _id:  user_leaf_num + 1,
           auth_hash: data.auth_hash,
@@ -78,6 +79,7 @@ async function convertCachedToLeaf() {
           hash: data.hash,
           public_key: data.public_key,
           parent: "",
+          position: position,
           level: 1,
         })
         user_leaf_num = user_leaf_num + 1
@@ -115,13 +117,15 @@ async function buildMerkleTree() {
         let curParent = left.parent
         // Add new parent if not existed
         let parentId = uuid().toString()
+        let position = Math.ceil(i /2) % 2  == 0 ? 0 : 1
         if (curParent == "") {
           try {
             let otherNodeData = {
               _id: parentId,
               hash: parentHash,
               parent: "",
-              level: level
+              level: level, 
+              position: position,
             }
             childArray.push(otherNodeData)
             var newOtherNode = new OtherNode(otherNodeData)
@@ -236,7 +240,7 @@ async function provideAuthHash(req: Request) {
 async function getInfo(req: Request){
   var data: any = req.body
   var public_key: string = data.public_key
-  var siblings: string [] = []
+  var siblings: any= []
   var credit_score: number = 0
   var timestamp: string = ""
 
@@ -249,11 +253,11 @@ async function getInfo(req: Request){
     while(curNode.parent != "") {
       var siblingsNodeList: IOtherNode[] | null = await OtherNode.find({parent: curNode.parent})
       if(siblingsNodeList.length == 1) {
-        siblings.push(curNode.hash) 
+        siblings.push([curNode.hash, curNode.position]) 
       } else {
         for(let i = 0; i < siblingsNodeList.length; ++i) {
           if(siblingsNodeList[i].hash != curNode.hash) {
-            siblings.push(siblingsNodeList[i].hash)
+            siblings.push([siblingsNodeList[i].hash, siblingsNodeList[i].position])
           }
         }
       }
