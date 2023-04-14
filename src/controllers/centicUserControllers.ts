@@ -26,7 +26,8 @@ async function getNumberOfMerkleTreeInfo() {
 
 async function hashData(left: string, right: string){
   var mimc = await mimc7()
-  return toHexString(mimc.multiHash([left, right], 0))
+  var hash = mimc.multiHash([left, right], 0)
+  return mimc.F.toObject(hash).toString()
 }
 
 
@@ -110,11 +111,8 @@ async function buildMerkleTree() {
       for (let i = 0; i < hashes.length; i += 2) {
         let left = hashes[i]
         let right = i == hashes.length - 1 ? hashes[i] : hashes[i + 1]
-
         let parentHash = await hashData(left.hash, right.hash)
-      
         let curParent = left.parent
-
         // Add new parent if not existed
         let parentId = uuid().toString()
         if (curParent == "") {
@@ -206,7 +204,9 @@ async function provideAuthHash(req: Request) {
   if (centicUserCheck != null && userCachedCheck == null && userLeafCheck == null) {
     try {
       var user_cached_num = await getNumberOfUserCached()
-      var hash = toHexString(mimc.multiHash([auth_hash, centicUserCheck.credit_score, centicUserCheck.timestamp], 0))
+
+      var hash = mimc.multiHash([auth_hash, centicUserCheck.credit_score, centicUserCheck.timestamp], 0)
+      hash = mimc.F.toObject(hash).toString()
       var newUserCached = new UserCached({
         _id: user_cached_num + 1,
         auth_hash: auth_hash,
