@@ -70,7 +70,7 @@ async function convertCachedToLeaf() {
     var userLeafCheck: IUserLeaf | null = await UserLeaf.findOne({public_key: data.public_key})
     if( userLeafCheck == null ) {
       try {
-        let position = (user_leaf_num + 1) % 2 == 0 ? 1 : 0
+        let position = (user_leaf_num + 1) % 2 == 0 ? 0 : 1
         var newUserLeaf = new UserLeaf({
           _id:  user_leaf_num + 1,
           auth_hash: data.auth_hash,
@@ -117,7 +117,7 @@ async function buildMerkleTree() {
         let curParent = left.parent
         // Add new parent if not existed
         let parentId = uuid().toString()
-        let position = Math.ceil(i /2) % 2  == 0 ? 0 : 1
+        let position = Math.ceil(i /2) % 2  == 0 ? 1 : 0
         if (curParent == "") {
           try {
             let otherNodeData = {
