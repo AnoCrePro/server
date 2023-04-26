@@ -33,7 +33,6 @@ async function hashData(left: string, right: string){
 
 async function register (req: Request) {
   let data: any = req.body
-  let name: string = data.name
   let credit_score: number = data.credit_score
   let timestamp: string = data.timestamp
   let public_key: string = data.public_key
@@ -43,7 +42,6 @@ async function register (req: Request) {
   if (centicUserCheck == null) {
     try{
       let newCenticUser = new CenticUser({
-        name: name,
         credit_score: credit_score,
         timestamp: timestamp,
         public_key: public_key
