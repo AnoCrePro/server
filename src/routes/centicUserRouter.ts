@@ -1,5 +1,5 @@
 import {Request, Response} from "express";
-import { register, provideAuthHash, buildMerkleTree, convertCachedToLeaf, getInfo } from "../controllers/centicUserControllers";
+import { register, provideAuthHash, buildMerkleTree, convertCachedToLeaf, getInfo, getRegisterInfo, updateRegisterInfo } from "../controllers/centicUserControllers";
 
 const express = require("express")
 const router = express.Router();
@@ -14,6 +14,25 @@ router.post("/register/", async(req: Request, res: Response) => {
   }
 })
 
+router.post("/registerInfo/", async(req: Request, res: Response) => {
+  try {
+    var resData = await getRegisterInfo(req)
+    return res.status(201).json(resData)
+  } catch (err) {
+    console.log("Error: POST /centic/user/register/", err)
+    return res.status(404).json({err: (err as Error).message})
+  }
+})
+
+router.post("/updateRegisterInfo/", async(req: Request, res: Response) => {
+  try {
+    var resData = await updateRegisterInfo(req)
+    return res.status(201).json(resData)
+  } catch (err) {
+    console.log("Error: POST /centic/user/updateRegisterInfo/", err)
+    return res.status(404).json({err: (err as Error).message})
+  }
+})
 
 router.post("/provideAuthHash/", async(req: Request, res: Response) => {
   try {
@@ -25,7 +44,7 @@ router.post("/provideAuthHash/", async(req: Request, res: Response) => {
   }
 })
 
-router.get("/info/", async(req: Request, res: Response) => {
+router.post("/info/", async(req: Request, res: Response) => {
   try {
     var resData = await getInfo(req)
     return res.status(201).json(resData)

@@ -4,7 +4,7 @@ import { getMerkleTreeInfo } from "../controllers/merkleTreeControllers";
 const express = require("express")
 const router = express.Router();
 
-router.get("/info/", async(req: Request, res: Response) => {
+router.post("/info/", async(req: Request, res: Response) => {
   try {
     var resData = await getMerkleTreeInfo()
     return res.status(201).json(resData)

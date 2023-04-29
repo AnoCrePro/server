@@ -14,7 +14,6 @@ dotenv.config();
 async function getNumberOfUserCached() {
   return await UserCached.count({})
 }
-
 async function getNumberOfUserLeaf() {
   let data: any = await UserLeaf.find({level: 1})
   return data.length
@@ -35,7 +34,7 @@ async function register (req: Request) {
   let data: any = req.body
   let credit_score: number = data.credit_score
   let timestamp: string = data.timestamp
-  let public_key: string = data.public_key
+  let public_key: string = data.public_key.toLowerCase()
 
   let centicUserCheck: ICenticUser | null = await CenticUser.findOne({public_key: public_key})
 
@@ -60,11 +59,49 @@ async function register (req: Request) {
   }
 }
 
+async function updateRegisterInfo (req: Request) {
+  let data: any = req.body
+  let credit_score: number = data.credit_score
+  let timestamp: string = data.timestamp
+  let public_key: string = data.public_key
+
+  let centicUserCheck: ICenticUser | null = await CenticUser.findOne({public_key: public_key})
+
+  if (centicUserCheck == null) {
+    try{
+      let newCenticUser = new CenticUser({
+        credit_score: credit_score,
+        timestamp: timestamp,
+        public_key: public_key
+      })
+
+      await newCenticUser.save();
+
+      return await CenticUser.findOne({public_key: public_key})
+    } 
+    catch(err) {
+      console.log(err)
+    }
+  }  
+  else {
+    try {
+      let centicUser: ICenticUser | null = await CenticUser.findOneAndUpdate({public_key: public_key}, {
+        credit_score: credit_score,
+        timestamp: timestamp,
+      }, {new: true})
+      return centicUser
+    }
+    catch (err) {
+      console.log(err)
+    }
+  }
+}
+
 async function convertCachedToLeaf() {
   let user_leaf_num = await getNumberOfUserLeaf()
   let user_cached_data = await UserCached.find({})
   
-  user_cached_data.map(async (data) => {
+  await user_cached_data.map(async (data) => {
     let userLeafCheck: IUserLeaf | null = await UserLeaf.findOne({public_key: data.public_key})
     if( userLeafCheck == null ) {
       try {
@@ -90,14 +127,14 @@ async function convertCachedToLeaf() {
       console.log("User Leaf " + data.public_key + " is existed!")
     }
   })
-  let msg = await buildMerkleTree()
   await UserCached.deleteMany({})
-
+  let msg = await buildMerkleTree()
   return msg
 }
 
 async function buildMerkleTree() {
   let user_leaf_data = await UserLeaf.find({level: 1}).sort({_id: "ascending"})
+  console.log(user_leaf_data.length)
   let cur_merkle_tree_number = await getNumberOfMerkleTreeInfo()
   if(user_leaf_data.length > 0) {
     let hashes = user_leaf_data.map(x => x)
@@ -143,17 +180,17 @@ async function buildMerkleTree() {
         // update child
         if(level == 2) {
           if(left.parent == "") {
-            await UserLeaf.findOneAndUpdate({_id: left._id}, {parent: parentId})
+            await UserLeaf.findOneAndUpdate({_id: left._id}, {parent: curParent})
           }
           if(right.parent == "") {
-            await UserLeaf.findOneAndUpdate({_id: right._id}, {parent: parentId})
+            await UserLeaf.findOneAndUpdate({_id: right._id}, {parent: curParent})
           }
         } else {
           if(left.parent == "") {
-            await OtherNode.findOneAndUpdate({_id: left._id}, {parent: parentId})
+            await OtherNode.findOneAndUpdate({_id: left._id}, {parent: curParent})
           }
           if(right.parent == "") {
-            await OtherNode.findOneAndUpdate({_id: right._id}, {parent: parentId})
+            await OtherNode.findOneAndUpdate({_id: right._id}, {parent: curParent})
           }
         }
       }
@@ -193,6 +230,15 @@ async function buildMerkleTree() {
   }
 }
 
+async function getRegisterInfo(req: Request) {
+  let data: any = req.body
+  let public_key: string = data.public_key
+
+  let centicUserCheck: ICenticUser | null = await CenticUser.findOne({public_key: public_key})
+
+  return centicUserCheck
+}
+
 async function provideAuthHash(req: Request) {
   let data: any = req.body
   let auth_hash: string = data.auth_hash
@@ -221,7 +267,7 @@ async function provideAuthHash(req: Request) {
 
       await newUserCached.save()
 
-      if(user_cached_num + 1 == 10) {
+      if(user_cached_num + 1 >= 1) {
         convertCachedToLeaf()
       }
 
@@ -243,17 +289,27 @@ async function getInfo(req: Request){
   let direction: any=[]
   let credit_score: number = 0
   let timestamp: string = ""
+  let auth_hash: string = ""
+  let root: string = ""
 
-  let userLeafCheck: IUserLeaf | null = await UserLeaf.findOne({public_key: public_key})
+  let userLeafCheck: IUserLeaf | null = await UserLeaf.findOne({public_key: public_key.toLowerCase()})
   if(userLeafCheck != null) {
     credit_score = userLeafCheck.credit_score
     timestamp = userLeafCheck.timestamp
+    auth_hash = userLeafCheck.auth_hash
+
+    var cur_merkle_tree_number = await getNumberOfMerkleTreeInfo()
+    var curMerkleTree: IMerkleTree | null = await MerkleTree.findOne({_id: cur_merkle_tree_number})
+    if(curMerkleTree != null) {
+      root = curMerkleTree.root
+    }
 
     let curNode: IUserLeaf | IOtherNode = userLeafCheck
     while(curNode.parent != "") {
       let siblingsNodeList: IOtherNode[] | null = await OtherNode.find({parent: curNode.parent})
       if(siblingsNodeList.length == 1) {
-        siblings.push([curNode.hash, curNode.position]) 
+        siblings.push(siblingsNodeList[0].hash)
+        direction.push(siblingsNodeList[0].position.toString())
       } else {
         for(let i = 0; i < siblingsNodeList.length; ++i) {
           if(siblingsNodeList[i].hash != curNode.hash) {
@@ -280,7 +336,10 @@ async function getInfo(req: Request){
       curHash = tempHash
     }
     return {
+      main_pub: public_key,
       credit_score: credit_score,
+      auth_hash: auth_hash,
+      root: root,
       timestamp: timestamp,
       direction: direction,
       siblings: siblings
@@ -288,8 +347,7 @@ async function getInfo(req: Request){
   }
   else {
     throw Error("Get User Leaf Info: Fail!")
-    return {}
   }
 }
 
-export {register, provideAuthHash, convertCachedToLeaf, buildMerkleTree, getInfo}
+export {register, updateRegisterInfo, provideAuthHash, convertCachedToLeaf, buildMerkleTree, getInfo, getRegisterInfo}

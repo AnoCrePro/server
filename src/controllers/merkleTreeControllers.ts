@@ -16,7 +16,6 @@ async function getMerkleTreeInfo() {
   }
   else {
     throw Error("Get Merkle Tree Info: Fail!")
-    return {}
   }
 }
 
