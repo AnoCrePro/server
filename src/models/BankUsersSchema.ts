@@ -1,6 +1,8 @@
 import { Schema, model, Document } from "mongoose";
 
 export interface IBankUser extends Document {
+  username: string;
+  password: string;
   name: string;
   age: number;
   address: string;
@@ -10,6 +12,8 @@ export interface IBankUser extends Document {
 }
 
 const BankUserSchema: Schema = new Schema({
+  username: {type: String, require: true},
+  password: {type: String, require: true},
   name: {type: String, require: true},
   age: {type: Number, require: true},
   address: {type: String, require: true},
