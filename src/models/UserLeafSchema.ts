@@ -9,6 +9,7 @@ export interface IUserLeaf extends Document {
   public_key: string;
   parent: string;
   position: number;
+  bank_id: string;
   level: number
 }
 
@@ -20,6 +21,7 @@ const UserLeafSchema: Schema = new Schema({
   hash: {type: String, require: true},
   public_key: {type: String, require: true},
   parent: {type: String, require:true},
+  bank_id: {type: String, require:true},
   position: {type: Number, require:true},
   level: {type: Number, require:true},
 }, {collection: 'merkletree', versionKey: false})

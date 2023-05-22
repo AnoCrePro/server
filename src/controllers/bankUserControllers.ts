@@ -1,6 +1,8 @@
 import BankUser, { IBankUser } from "../models/BankUsersSchema";
 import { Request } from "express";
 import * as dotenv from "dotenv";
+const { groth16 } = require("snarkjs");
+const v_key = require("./verification_key.json")
 
 
 dotenv.config();
@@ -57,4 +59,13 @@ async function checkLogin (req: Request){
   }
 }
 
-export { register, checkLogin }
+async function verifyProof (req: Request) {
+  let data = req.body
+  let proof = data.proof
+  let publicSignals = data.publicSignals
+
+  const res = await groth16.verify(v_key, publicSignals, proof);
+  return res
+}
+
+export { register, checkLogin, verifyProof }

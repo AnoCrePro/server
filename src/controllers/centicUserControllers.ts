@@ -8,6 +8,11 @@ import * as dotenv from "dotenv";
 import UserLeaf, { IUserLeaf } from "../models/UserLeafSchema";
 import { mimc7 } from "../utils/crypto"
 import { toHexString } from "../utils/others";
+import { sendSignedTxAndGetResult, privateKeyToAccount } from "../utils/trans";
+import Web3 from "web3"
+
+const web3 = new Web3("https://rpc.sepolia.org")
+const merkleTreeAbi = require("../abi/rootabi.json")
 
 dotenv.config();
 
@@ -112,6 +117,7 @@ async function convertCachedToLeaf() {
           credit_score: data.credit_score,
           timestamp: data.timestamp,
           hash: data.hash,
+          bank_id: data.bank_id,
           public_key: data.public_key,
           parent: "",
           position: position,
@@ -134,7 +140,7 @@ async function convertCachedToLeaf() {
 
 async function buildMerkleTree() {
   let user_leaf_data = await UserLeaf.find({level: 1}).sort({_id: "ascending"})
-  console.log(user_leaf_data.length)
+  console.log(user_leaf_data)
   let cur_merkle_tree_number = await getNumberOfMerkleTreeInfo()
   if(user_leaf_data.length > 0) {
     let hashes = user_leaf_data.map(x => x)
@@ -180,17 +186,37 @@ async function buildMerkleTree() {
         // update child
         if(level == 2) {
           if(left.parent == "") {
-            await UserLeaf.findOneAndUpdate({_id: left._id}, {parent: curParent})
+            if(curParent == "") {
+              await UserLeaf.findOneAndUpdate({_id: left._id}, {parent: parentId})
+            }
+            else {
+              await UserLeaf.findOneAndUpdate({_id: left._id}, {parent: curParent})
+            }
           }
           if(right.parent == "") {
-            await UserLeaf.findOneAndUpdate({_id: right._id}, {parent: curParent})
+            if(curParent == "") {
+              await UserLeaf.findOneAndUpdate({_id: right._id}, {parent: parentId})
+            }
+            else {
+              await UserLeaf.findOneAndUpdate({_id: right._id}, {parent: curParent})
+            }
           }
         } else {
           if(left.parent == "") {
-            await OtherNode.findOneAndUpdate({_id: left._id}, {parent: curParent})
+            if(curParent == "") {
+              await OtherNode.findOneAndUpdate({_id: left._id}, {parent: parentId})
+            }
+            else {
+              await OtherNode.findOneAndUpdate({_id: left._id}, {parent: curParent})
+            }
           }
           if(right.parent == "") {
-            await OtherNode.findOneAndUpdate({_id: right._id}, {parent: curParent})
+            if(curParent == "") {
+              await OtherNode.findOneAndUpdate({_id: right._id}, {parent: parentId})
+            }
+            else {
+              await OtherNode.findOneAndUpdate({_id: right._id}, {parent: curParent})
+            }
           }
         }
       }
@@ -206,6 +232,24 @@ async function buildMerkleTree() {
       }
       hashes[0].hash = curHash
     }
+
+    let account = privateKeyToAccount(web3, "d6ca2953383daf0b410de38c6d98ba87b04aaa91aa99d8da903672fd81107c33")
+      .then(res => {
+        console.log(res)
+      })
+
+    let merkleTreeContract = await new web3.eth.Contract(
+        merkleTreeAbi,
+        "0xC1a907e7dacc7ea005c2F50165e08b44C5096fD9"
+      )
+
+    const insertRootFunction = merkleTreeContract.methods.insertRoot(hashes[0].hash)
+    await sendSignedTxAndGetResult(account, merkleTreeContract, 0, insertRootFunction, 10.0, web3)
+      .then(res => {
+        console.log(res)
+      })
+
+    
     // Update Merkle Tree Info 
     let curMerkleTree: IMerkleTree | null = await MerkleTree.findOne({_id: cur_merkle_tree_number})
     if(curMerkleTree == null || curMerkleTree.root != hashes[0].hash) {
@@ -220,6 +264,7 @@ async function buildMerkleTree() {
       let newMerkleTree = new MerkleTree(newMerkleTreeData)
 
       await newMerkleTree.save()
+
       console.log("Build new merkle tree successfully")
     } else {
       throw Error("Merkle Tree: Root hash doesn't change!")
@@ -243,7 +288,7 @@ async function provideAuthHash(req: Request) {
   let data: any = req.body
   let auth_hash: string = data.auth_hash
   let public_key: string = data.public_key
-
+  let bank_id: string = data.bank_id
   let mimc = await mimc7()
 
   let centicUserCheck: ICenticUser | null = await CenticUser.findOne({public_key: public_key})
@@ -261,6 +306,7 @@ async function provideAuthHash(req: Request) {
         auth_hash: auth_hash,
         credit_score: centicUserCheck.credit_score,
         timestamp: centicUserCheck.timestamp,
+        bank_id: bank_id,
         hash: hash,
         public_key: public_key
       })
@@ -290,12 +336,14 @@ async function getInfo(req: Request){
   let credit_score: number = 0
   let timestamp: string = ""
   let auth_hash: string = ""
+  let bank_id: string = ""
   let root: string = ""
 
   let userLeafCheck: IUserLeaf | null = await UserLeaf.findOne({public_key: public_key.toLowerCase()})
   if(userLeafCheck != null) {
     credit_score = userLeafCheck.credit_score
     timestamp = userLeafCheck.timestamp
+    bank_id = userLeafCheck.bank_id
     auth_hash = userLeafCheck.auth_hash
 
     var cur_merkle_tree_number = await getNumberOfMerkleTreeInfo()
@@ -342,6 +390,7 @@ async function getInfo(req: Request){
       root: root,
       timestamp: timestamp,
       direction: direction,
+      bank_id: bank_id,
       siblings: siblings
     }
   }

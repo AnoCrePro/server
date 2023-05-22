@@ -7,6 +7,7 @@ export interface IUserCached extends Document {
   timestamp: string;
   hash: string;
   public_key: string;
+  bank_id: string;
 }
 
 const UserCachedSchema: Schema = new Schema({
@@ -16,6 +17,7 @@ const UserCachedSchema: Schema = new Schema({
   timestamp: {type: String, require:true},
   hash: {type: String, require: true},
   public_key: {type: String, require: true},
+  bank_id: {type: String, require: true},
 }, {collection: 'usercached', versionKey: false})
 
 export default model<IUserCached>("UserCached", UserCachedSchema)
