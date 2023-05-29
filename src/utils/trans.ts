@@ -1,7 +1,6 @@
 import BigNumber from "bignumber.js";
 
 export async function sendSignedTxAndGetResult(account: any, contract: any, spendAmount: any, contractMethod: any, gasMultiplier: any, web3: any) {
-  console.log(account)
   const encodedAbi = contractMethod.encodeABI();
 
   let currentGasPrice = await web3.eth.getGasPrice();
@@ -10,14 +9,15 @@ export async function sendSignedTxAndGetResult(account: any, contract: any, spen
   console.log(`Currrent gas price: ${currentGasPrice}, and proposed price: ${proposedGasPrice}`)
 
   let tx = {
-    from: account['address'],
+    from: account.address,
     to: contract._address,
     gas: 1000000,
-    gasPrice: proposedGasPrice.toString(),
+    gasPrice: currentGasPrice.toString(),
     data: encodedAbi,
     value: spendAmount
   } 
 
+  console.log(account, tx)
   let signedTxn = await account.signTransaction(tx);
 
   let response = await web3.eth.sendSignedTransaction(signedTxn.rawTransaction)

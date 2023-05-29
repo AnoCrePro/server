@@ -140,7 +140,6 @@ async function convertCachedToLeaf() {
 
 async function buildMerkleTree() {
   let user_leaf_data = await UserLeaf.find({level: 1}).sort({_id: "ascending"})
-  console.log(user_leaf_data)
   let cur_merkle_tree_number = await getNumberOfMerkleTreeInfo()
   if(user_leaf_data.length > 0) {
     let hashes = user_leaf_data.map(x => x)
@@ -150,7 +149,7 @@ async function buildMerkleTree() {
     while (hashes.length > 1) {
       level = level + 1 
       let childArray: Array<any> = []
-
+      
       for (let i = 0; i < hashes.length; i += 2) {
         let left = hashes[i]
         let right = i == hashes.length - 1 ? hashes[i] : hashes[i + 1]
@@ -233,21 +232,18 @@ async function buildMerkleTree() {
       hashes[0].hash = curHash
     }
 
-    let account = privateKeyToAccount(web3, "d6ca2953383daf0b410de38c6d98ba87b04aaa91aa99d8da903672fd81107c33")
-      .then(res => {
-        console.log(res)
-      })
+    // let account = await privateKeyToAccount(web3, "d6ca2953383daf0b410de38c6d98ba87b04aaa91aa99d8da903672fd81107c33")
 
-    let merkleTreeContract = await new web3.eth.Contract(
-        merkleTreeAbi,
-        "0xC1a907e7dacc7ea005c2F50165e08b44C5096fD9"
-      )
+    // let merkleTreeContract = await new web3.eth.Contract(
+    //     merkleTreeAbi,
+    //     "0xC1a907e7dacc7ea005c2F50165e08b44C5096fD9"
+    //   )
 
-    const insertRootFunction = merkleTreeContract.methods.insertRoot(hashes[0].hash)
-    await sendSignedTxAndGetResult(account, merkleTreeContract, 0, insertRootFunction, 10.0, web3)
-      .then(res => {
-        console.log(res)
-      })
+    // const insertRootFunction = merkleTreeContract.methods.insertRoot(hashes[0].hash)
+    // await sendSignedTxAndGetResult(account, merkleTreeContract, 0, insertRootFunction, 10.0, web3)
+    //   .then(res => {
+    //     console.log(res)
+    //   })
 
     
     // Update Merkle Tree Info 
@@ -399,4 +395,12 @@ async function getInfo(req: Request){
   }
 }
 
-export {register, updateRegisterInfo, provideAuthHash, convertCachedToLeaf, buildMerkleTree, getInfo, getRegisterInfo}
+async function checkUserLeaf (req: Request){
+  let data = req.body
+  let public_key = data.public_key
+
+  let userLeafCheck: IUserLeaf | null = await UserLeaf.findOne({public_key: public_key.toLowerCase()})
+  return userLeafCheck
+}
+
+export {register, updateRegisterInfo, provideAuthHash, convertCachedToLeaf, buildMerkleTree, getInfo, getRegisterInfo, checkUserLeaf}
