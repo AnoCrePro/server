@@ -11,8 +11,25 @@ import { toHexString } from "../utils/others";
 import { sendSignedTxAndGetResult, privateKeyToAccount } from "../utils/trans";
 import Web3 from "web3"
 
-const web3 = new Web3("https://rpc.sepolia.org")
-const merkleTreeAbi = require("../abi/rootabi.json")
+// var ipfsAPI = require('ipfs-api')
+
+// const web3 = new Web3("https://rpc.sepolia.org")
+// const merkleTreeAbi = require("../abi/rootabi.json")
+
+// const projectId = '2PyRVePShrDRMUhgHdpf6zW7NSw';
+// const projectSecret = '69325cd9fa06b38d50d44dcfcb5e0e56';
+// const auth = 'Basic ' + Buffer.from(projectId + ':' + projectSecret).toString('base64');
+
+// const client = ipfsAPI({
+//     host: 'ipfs.infura.io',
+//     port: 5001,
+//     protocol: 'https',
+//     apiPath: '/api/v0',
+//     headers: {
+//       authorization: auth,
+//     }
+//   })
+
 
 dotenv.config();
 
@@ -231,6 +248,15 @@ async function buildMerkleTree() {
       }
       hashes[0].hash = curHash
     }
+
+    // const jsonText = JSON.stringify({root: hashes[0].hash}, null, "\t");
+
+    // client.add(jsonText, function (err, file) {
+    //   if (err) {
+    //       console.log(err);
+    //   }
+    //   console.log(file);
+    // })
 
     // let account = await privateKeyToAccount(web3, "d6ca2953383daf0b410de38c6d98ba87b04aaa91aa99d8da903672fd81107c33")
 
