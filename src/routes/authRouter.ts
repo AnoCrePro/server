@@ -54,7 +54,7 @@ router.post("/login", async (req: Request, res: Response) => {
       res.end("user not exist");
       return;
     }
-    if (verifyHash(userData.password, password)) {
+    if (verifyHash(password, userData.password)) {
       res.end("wrong password");
       return;
     }
