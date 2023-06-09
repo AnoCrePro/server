@@ -9,6 +9,7 @@ const { verifyApiKey } = require("../utils/service");
 const Crypto = require("crypto-js");
 const jwt = require("jsonwebtoken");
 
+const centicAppUrl = "http://178.128.93.195:3001";
 router.post("/createKey", verifyTk, async (req: Request, res: Response) => {
   try {
     const { userData } = req.body;
@@ -118,15 +119,7 @@ router.post("/revokeKey", verifyTk, async (req: Request, res: Response) => {
 router.get("/createUrl", verifyApiKey, async (req: Request, res: Response) => {
   try {
     const apiKey = req.header("x-apikey");
-    console.log(
-      "🚀 ~ file: servicesRouter.ts:121 ~ router.get ~ apiKey:",
-      apiKey
-    );
     const apiKey_id = apiKey ? apiKey.split(".")[0] : undefined;
-    console.log(
-      "🚀 ~ file: servicesRouter.ts:122 ~ router.get ~ apiKey_id :",
-      apiKey_id
-    );
     const { web2Id } = req.query;
     const token = jwt.sign(
       {
@@ -142,10 +135,6 @@ router.get("/createUrl", verifyApiKey, async (req: Request, res: Response) => {
     const userKeyData = await keyCollection.findOne({
       key_id: apiKey_id,
     });
-    console.log(
-      "🚀 ~ file: servicesRouter.ts:137 ~ router.get ~ userKeyData:",
-      userKeyData
-    );
     const bankId = (
       await userCollection.findOne({
         id: userKeyData.userId,
@@ -153,7 +142,7 @@ router.get("/createUrl", verifyApiKey, async (req: Request, res: Response) => {
     )?.bankId;
     const condition = userKeyData.condition;
     res.json({
-      url: `http://172.168.15.92:3000/?token=${token}&thirdPartyID=${bankId}&web2ID=${web2Id}&condition=${condition}`,
+      url: `${centicAppUrl}/?token=${token}&thirdPartyID=${bankId}&web2ID=${web2Id}&condition=${condition}`,
     });
   } catch (err: any) {
     console.log(err.message);
