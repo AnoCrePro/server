@@ -12,7 +12,7 @@ router.post("/register", async (req: Request, res: Response) => {
     const userId = uuidv4();
     const { bankId, password, userName } = req.body;
     if (!(bankId && password && userName)) {
-      res.json({ success: false });
+      res.json({ success: false, res: "empty" });
       return;
     }
     const db = await getDBConnection();
@@ -30,6 +30,7 @@ router.post("/register", async (req: Request, res: Response) => {
   } catch (err: any) {
     res.json({
       success: false,
+      err: err.message
     });
   }
 });
