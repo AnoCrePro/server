@@ -16,7 +16,7 @@ export async function verifyToken (token: any) {
 
 export async function hashString (message: any) {
   const Crypto = require("crypto-js");
-  return Crypto.SHA256("test").toString(Crypto.enc.Hex);
+  return Crypto.SHA256(message).toString(Crypto.enc.Hex);
 };
 
 export async function verifyHash (message: any, hash: any) {
