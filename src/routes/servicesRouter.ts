@@ -9,7 +9,7 @@ const { verifyApiKey } = require("../utils/service");
 const Crypto = require("crypto-js");
 const jwt = require("jsonwebtoken");
 
-const centicAppUrl = "http://178.128.93.195:3001";
+const centicAppUrl = "https://178.128.93.195:3001";
 router.post("/createKey", verifyTk, async (req: Request, res: Response) => {
   try {
     const { userData } = req.body;
