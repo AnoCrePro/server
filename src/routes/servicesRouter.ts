@@ -117,8 +117,16 @@ router.post("/revokeKey", verifyTk, async (req: Request, res: Response) => {
 
 router.get("/createUrl", verifyApiKey, async (req: Request, res: Response) => {
   try {
-    const apiKey = req.header("x-api-key");
+    const apiKey = req.header("x-apikey");
+    console.log(
+      "🚀 ~ file: servicesRouter.ts:121 ~ router.get ~ apiKey:",
+      apiKey
+    );
     const apiKey_id = apiKey ? apiKey.split(".")[0] : undefined;
+    console.log(
+      "🚀 ~ file: servicesRouter.ts:122 ~ router.get ~ apiKey_id :",
+      apiKey_id
+    );
     const { web2Id } = req.query;
     const token = jwt.sign(
       {
@@ -134,6 +142,10 @@ router.get("/createUrl", verifyApiKey, async (req: Request, res: Response) => {
     const userKeyData = await keyCollection.findOne({
       key_id: apiKey_id,
     });
+    console.log(
+      "🚀 ~ file: servicesRouter.ts:137 ~ router.get ~ userKeyData:",
+      userKeyData
+    );
     const bankId = (
       await userCollection.findOne({
         id: userKeyData.userId,
