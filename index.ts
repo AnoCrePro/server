@@ -15,7 +15,7 @@ var app = express()
 const port = process.env.PORT
 
 app.use(json())
-app.use(cors())
+app.use(cors({origin: '*'}))
 app.use("/centic/user", centicUserRouter)
 app.use("/centic/merkletree", merkleTreeRouter)
 app.use("/centic/auth", authRouter)
