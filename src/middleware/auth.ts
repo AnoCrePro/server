@@ -1,6 +1,6 @@
-const { verifyToken } = require("../utils/auth")
+const { verifyToken } = require("../utils/auth");
 
-export async function verifyTk (req: any, res: any, next: any) {
+export async function verifyTk(req: any, res: any, next: any) {
   if (!req.headers.authorization) {
     res.json({
       valid: false,
@@ -9,13 +9,14 @@ export async function verifyTk (req: any, res: any, next: any) {
   } else {
     const result = await verifyToken(req.headers.authorization);
     if (result.valid) {
-      req.userData = result;
+      req.body.userData = result;
       next();
     } else {
+      res.status(400);
       res.json({
         valid: false,
         err: "Invalid token",
       });
     }
   }
-};
+}

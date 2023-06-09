@@ -1,4 +1,4 @@
-import {Request, Response} from "express";
+import { Request, Response } from "express";
 
 const express = require("express");
 const { verifyTk } = require("../middleware/auth");
@@ -173,4 +173,4 @@ router.post("/verifyUrl", async (req: Request, res: Response) => {
   }
 });
 
-export { router as servicesRouter}
+export { router as servicesRouter };
