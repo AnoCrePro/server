@@ -12,30 +12,22 @@ async function register (req: Request) {
   let data: any = req.body
   let username: any = data.username
   let password: any = data.password
-  let name: string = data.name
-  let age: number = data.age
-  let address: string = data.address
-  let timestamp: string = data.timestamp
-  let public_key: string = data.public_key
+  let account_number: string = data.name
 
-  let bankUserCheck: IBankUser | null = await BankUser.findOne({public_key: public_key})
+  let bankUserCheck: IBankUser | null = await BankUser.findOne({account_number: account_number})
 
   if (bankUserCheck == null) {
     try{
       let newBankUser = new BankUser({
         username: username,
         password: password,
-        name: name,
-        age: age,
-        address: address,
-        public_key: public_key,
-        timestamp: timestamp,
+        account_number: account_number,
         proof: {}
       })
 
       await newBankUser.save();
 
-      return await BankUser.findOne({public_key: public_key})
+      return await BankUser.findOne({account_number: account_number})
     } 
     catch(err) {
       console.log("Bank: Register Fail!", err)

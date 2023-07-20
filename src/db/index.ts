@@ -6,6 +6,6 @@ const client = new MongoClient(connectString);
 
 export async function getDBConnection () {
   await client.connect();
-  const db = client.db("Centic");
+  const db = client.db("DANC");
   return db;
 };

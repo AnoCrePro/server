@@ -11,24 +11,6 @@ import { toHexString } from "../utils/others";
 import { sendSignedTxAndGetResult, privateKeyToAccount } from "../utils/trans";
 import Web3 from "web3"
 
-// var ipfsAPI = require('ipfs-api')
-
-// const web3 = new Web3("https://rpc.sepolia.org")
-// const merkleTreeAbi = require("../abi/rootabi.json")
-
-// const projectId = '2PyRVePShrDRMUhgHdpf6zW7NSw';
-// const projectSecret = '69325cd9fa06b38d50d44dcfcb5e0e56';
-// const auth = 'Basic ' + Buffer.from(projectId + ':' + projectSecret).toString('base64');
-
-// const client = ipfsAPI({
-//     host: 'ipfs.infura.io',
-//     port: 5001,
-//     protocol: 'https',
-//     apiPath: '/api/v0',
-//     headers: {
-//       authorization: auth,
-//     }
-//   })
 
 
 dotenv.config();
@@ -54,7 +36,7 @@ async function hashData(left: string, right: string){
 
 async function register (req: Request) {
   let data: any = req.body
-  let credit_score: number = data.credit_score
+  let balance: number = data.balance
   let timestamp: string = data.timestamp
   let public_key: string = data.public_key.toLowerCase()
 
@@ -63,7 +45,7 @@ async function register (req: Request) {
   if (centicUserCheck == null) {
     try{
       let newCenticUser = new CenticUser({
-        credit_score: credit_score,
+        balance: balance,
         timestamp: timestamp,
         public_key: public_key
       })
@@ -83,7 +65,7 @@ async function register (req: Request) {
 
 async function updateRegisterInfo (req: Request) {
   let data: any = req.body
-  let credit_score: number = data.credit_score
+  let balance: number = data.balance
   let timestamp: string = data.timestamp
   let public_key: string = data.public_key
 
@@ -92,7 +74,7 @@ async function updateRegisterInfo (req: Request) {
   if (centicUserCheck == null) {
     try{
       let newCenticUser = new CenticUser({
-        credit_score: credit_score,
+        balance: balance,
         timestamp: timestamp,
         public_key: public_key
       })
@@ -108,7 +90,7 @@ async function updateRegisterInfo (req: Request) {
   else {
     try {
       let centicUser: ICenticUser | null = await CenticUser.findOneAndUpdate({public_key: public_key}, {
-        credit_score: credit_score,
+        balance: balance,
         timestamp: timestamp,
       }, {new: true})
       return centicUser
@@ -130,11 +112,10 @@ async function convertCachedToLeaf() {
         let position = (user_leaf_num + 1) % 2 == 0 ? 0 : 1
         let newUserLeaf = new UserLeaf({
           _id:  user_leaf_num + 1,
-          auth_hash: data.auth_hash,
+          balance: data.balance,
           credit_score: data.credit_score,
           timestamp: data.timestamp,
           hash: data.hash,
-          bank_id: data.bank_id,
           public_key: data.public_key,
           parent: "",
           position: position,
@@ -310,7 +291,6 @@ async function provideAuthHash(req: Request) {
   let data: any = req.body
   let auth_hash: string = data.auth_hash
   let public_key: string = data.public_key
-  let bank_id: string = data.bank_id
   let mimc = await mimc7()
 
   let centicUserCheck: ICenticUser | null = await CenticUser.findOne({public_key: public_key})
@@ -321,14 +301,13 @@ async function provideAuthHash(req: Request) {
     try {
       let user_cached_num = await getNumberOfUserCached()
 
-      let hash = mimc.multiHash([auth_hash, centicUserCheck.credit_score, centicUserCheck.timestamp], 0)
+      let hash = mimc.multiHash([auth_hash, centicUserCheck.balance, centicUserCheck.timestamp], 0)
       hash = mimc.F.toObject(hash).toString()
       let newUserCached = new UserCached({
         _id: user_cached_num + 1,
         auth_hash: auth_hash,
-        credit_score: centicUserCheck.credit_score,
+        balance: centicUserCheck.balance,
         timestamp: centicUserCheck.timestamp,
-        bank_id: bank_id,
         hash: hash,
         public_key: public_key
       })
@@ -355,17 +334,15 @@ async function getInfo(req: Request){
   let public_key: string = data.public_key
   let siblings: any= []
   let direction: any=[]
-  let credit_score: number = 0
+  let balance: number = 0
   let timestamp: string = ""
   let auth_hash: string = ""
-  let bank_id: string = ""
   let root: string = ""
 
   let userLeafCheck: IUserLeaf | null = await UserLeaf.findOne({public_key: public_key.toLowerCase()})
   if(userLeafCheck != null) {
-    credit_score = userLeafCheck.credit_score
+    balance = userLeafCheck.balance
     timestamp = userLeafCheck.timestamp
-    bank_id = userLeafCheck.bank_id
     auth_hash = userLeafCheck.auth_hash
 
     var cur_merkle_tree_number = await getNumberOfMerkleTreeInfo()
@@ -377,17 +354,20 @@ async function getInfo(req: Request){
     let curNode: IUserLeaf | IOtherNode = userLeafCheck
     while(curNode.parent != "") {
       let siblingsNodeList: IOtherNode[] | null = await OtherNode.find({parent: curNode.parent})
-      if(siblingsNodeList.length == 1) {
-        siblings.push(siblingsNodeList[0].hash)
-        direction.push(siblingsNodeList[0].position.toString())
-      } else {
-        for(let i = 0; i < siblingsNodeList.length; ++i) {
-          if(siblingsNodeList[i].hash != curNode.hash) {
-            siblings.push(siblingsNodeList[i].hash)
-            direction.push(siblingsNodeList[i].position.toString())
+      if(siblingsNodeList != null) {
+        if(siblingsNodeList.length == 1) {
+          siblings.push(siblingsNodeList[0].hash)
+          direction.push(siblingsNodeList[0].position.toString())
+        } else {
+          for(let i = 0; i < siblingsNodeList.length; ++i) {
+            if(siblingsNodeList[i].hash != curNode.hash) {
+              siblings.push(siblingsNodeList[i].hash)
+              direction.push(siblingsNodeList[i].position.toString())
+            }
           }
         }
       }
+      
       
       let nextNode: IOtherNode | null = await OtherNode.findOne({_id: curNode.parent})
       if(nextNode != null) {
@@ -407,12 +387,11 @@ async function getInfo(req: Request){
     }
     return {
       main_pub: public_key,
-      credit_score: credit_score,
+      balance: balance,
       auth_hash: auth_hash,
       root: root,
       timestamp: timestamp,
       direction: direction,
-      bank_id: bank_id,
       siblings: siblings
     }
   }
