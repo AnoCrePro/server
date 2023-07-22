@@ -10,6 +10,7 @@ import { mimc7 } from "../utils/crypto"
 import { toHexString } from "../utils/others";
 import { sendSignedTxAndGetResult, privateKeyToAccount } from "../utils/trans";
 import Web3 from "web3"
+import { timeStamp } from "console";
 
 
 
@@ -59,7 +60,7 @@ async function register (req: Request) {
     }
   }  
   else {
-    throw Error("Centic User existed!")
+    throw Error("User existed!")
   }
 }
 
@@ -93,6 +94,10 @@ async function updateRegisterInfo (req: Request) {
         balance: balance,
         timestamp: timestamp,
       }, {new: true})
+      let userLeaf: IUserLeaf | null = await UserLeaf.findOneAndUpdate({public_key: public_key}, {
+        balance: balance,
+        timestamp: timestamp,
+      }, {new: true})
       return centicUser
     }
     catch (err) {
@@ -102,6 +107,7 @@ async function updateRegisterInfo (req: Request) {
 }
 
 async function convertCachedToLeaf() {
+  let start = Date.now();
   let user_leaf_num = await getNumberOfUserLeaf()
   let user_cached_data = await UserCached.find({})
   
@@ -112,8 +118,8 @@ async function convertCachedToLeaf() {
         let position = (user_leaf_num + 1) % 2 == 0 ? 0 : 1
         let newUserLeaf = new UserLeaf({
           _id:  user_leaf_num + 1,
+          auth_hash: data.auth_hash,
           balance: data.balance,
-          credit_score: data.credit_score,
           timestamp: data.timestamp,
           hash: data.hash,
           public_key: data.public_key,
@@ -131,12 +137,15 @@ async function convertCachedToLeaf() {
       console.log("User Leaf " + data.public_key + " is existed!")
     }
   })
-  await UserCached.deleteMany({})
+  // await UserCached.deleteMany({})
   let msg = await buildMerkleTree()
+  let timeTaken = Date.now() - start;
+  console.log(timeTaken)
   return msg
 }
 
 async function buildMerkleTree() {
+  let start = Date.now();
   let user_leaf_data = await UserLeaf.find({level: 1}).sort({_id: "ascending"})
   let cur_merkle_tree_number = await getNumberOfMerkleTreeInfo()
   if(user_leaf_data.length > 0) {
@@ -229,30 +238,6 @@ async function buildMerkleTree() {
       }
       hashes[0].hash = curHash
     }
-
-    // const jsonText = JSON.stringify({root: hashes[0].hash}, null, "\t");
-
-    // client.add(jsonText, function (err, file) {
-    //   if (err) {
-    //       console.log(err);
-    //   }
-    //   console.log(file);
-    // })
-
-    // let account = await privateKeyToAccount(web3, "d6ca2953383daf0b410de38c6d98ba87b04aaa91aa99d8da903672fd81107c33")
-
-    // let merkleTreeContract = await new web3.eth.Contract(
-    //     merkleTreeAbi,
-    //     "0xC1a907e7dacc7ea005c2F50165e08b44C5096fD9"
-    //   )
-
-    // const insertRootFunction = merkleTreeContract.methods.insertRoot(hashes[0].hash)
-    // await sendSignedTxAndGetResult(account, merkleTreeContract, 0, insertRootFunction, 10.0, web3)
-    //   .then(res => {
-    //     console.log(res)
-    //   })
-
-    
     // Update Merkle Tree Info 
     let curMerkleTree: IMerkleTree | null = await MerkleTree.findOne({_id: cur_merkle_tree_number})
     if(curMerkleTree == null || curMerkleTree.root != hashes[0].hash) {
@@ -272,6 +257,8 @@ async function buildMerkleTree() {
     } else {
       throw Error("Merkle Tree: Root hash doesn't change!")
     }
+    let timeTaken = Date.now() - start;
+    console.log("Build merkle tree: " + timeTaken)
     return hashes[0].hash
   } else {
     throw Error("There are not User Leafs!")
@@ -314,27 +301,28 @@ async function provideAuthHash(req: Request) {
 
       await newUserCached.save()
 
-      if(user_cached_num + 1 >= 1) {
-        convertCachedToLeaf()
-      }
+      // if(user_cached_num + 1 >= 1) {
+      //   convertCachedToLeaf()
+      // }
 
       return await UserCached.findOne({public_key: public_key})
     } catch (err) {
       console.log("Provice Auth Hash fail", console.log(err))
     }
   } else if (centicUserCheck == null) {
-    throw Error("Centic User has to register before provide Authentication Hash!")
+    throw Error("User has to register before provide Authentication Hash!")
   } else {
-    throw Error("Centic User already provide Authentication Hash before!")
+    throw Error("User already provide Authentication Hash before!")
   }
 }
 
 async function getInfo(req: Request){
+  let start = Date.now()
   let data: any = req.body
   let public_key: string = data.public_key
   let siblings: any= []
   let direction: any=[]
-  let balance: number = 0
+  let balance: string = "0"
   let timestamp: string = ""
   let auth_hash: string = ""
   let root: string = ""
@@ -385,10 +373,12 @@ async function getInfo(req: Request){
       direction.push("0")
       curHash = tempHash
     }
+    let timeTaken = Date.now() - start;
+    console.log("Get info: " + timeTaken)
     return {
-      main_pub: public_key,
+      publicKey: public_key,
       balance: balance,
-      auth_hash: auth_hash,
+      authHash: auth_hash,
       root: root,
       timestamp: timestamp,
       direction: direction,
@@ -398,6 +388,7 @@ async function getInfo(req: Request){
   else {
     throw Error("Get User Leaf Info: Fail!")
   }
+  
 }
 
 async function checkUserLeaf (req: Request){

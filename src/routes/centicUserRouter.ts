@@ -19,8 +19,8 @@ router.post("/registerInfo/", async(req: Request, res: Response) => {
     var resData = await getRegisterInfo(req)
     return res.status(201).json(resData)
   } catch (err) {
-    console.log("Error: POST /centic/user/register/", err)
-    return res.status(404).json({err: (err as Error).message})
+    console.log("Error: POST /centic/user/registerInfo/", err)
+    return res.status(201).json({err: (err as Error).message})
   }
 })
 

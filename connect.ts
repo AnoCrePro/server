@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 function connectMongoDB() {
   var mongoDB: string = process.env.mongoDB || ''
-  mongoose.connect(mongoDB, {dbName: "Centic"})
+  mongoose.connect(mongoDB, {dbName: "DANC"})
 
   const database = mongoose.connection;
   database.on("error", (error) => {

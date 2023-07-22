@@ -22,7 +22,7 @@ async function register (req: Request) {
         username: username,
         password: password,
         account_number: account_number,
-        proof: {}
+        proof: ''
       })
 
       await newBankUser.save();

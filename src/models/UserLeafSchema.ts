@@ -3,7 +3,7 @@ import { Schema, model, Document } from "mongoose";
 export interface IUserLeaf extends Document {
   _id: number;
   auth_hash: string;
-  balance: number;
+  balance: string;
   timestamp: string;
   hash: string;
   public_key: string;
@@ -15,7 +15,7 @@ export interface IUserLeaf extends Document {
 const UserLeafSchema: Schema = new Schema({
   _id: {type: Number, require:true},
   auth_hash: {type: String, require: true},
-  balance: {type: Number, require:true},
+  balance: {type: String, require:true},
   timestamp: {type: String, require:true},
   hash: {type: String, require: true},
   public_key: {type: String, require: true},
