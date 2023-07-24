@@ -1,6 +1,6 @@
 import UserCached, { IUserCached } from "../models/UserCachedSchema";
 import { Request } from "express";
-import CenticUser, { ICenticUser } from "../models/CenticUserSchema";
+import CryptoScanUser, { ICryptoScanUser} from "../models/CryptoScanUserSchema";
 import OtherNode, { IOtherNode } from "../models/OtherNodeSchema";
 import MerkleTree, { IMerkleTree } from "../models/MerkleTreeSchema"
 import { uuid } from "uuidv4"
@@ -41,19 +41,19 @@ async function register (req: Request) {
   let timestamp: string = data.timestamp
   let public_key: string = data.public_key.toLowerCase()
 
-  let centicUserCheck: ICenticUser | null = await CenticUser.findOne({public_key: public_key})
+  let cryptoScanUserCheck: ICryptoScanUser | null = await CryptoScanUser.findOne({public_key: public_key})
 
-  if (centicUserCheck == null) {
+  if (cryptoScanUserCheck == null) {
     try{
-      let newCenticUser = new CenticUser({
+      let newcryptoScanUser = new CryptoScanUser({
         balance: balance,
         timestamp: timestamp,
         public_key: public_key
       })
 
-      await newCenticUser.save();
+      await newcryptoScanUser.save();
 
-      return await CenticUser.findOne({public_key: public_key})
+      return await CryptoScanUser.findOne({public_key: public_key})
     } 
     catch(err) {
       console.log("Register fail", err)
@@ -70,19 +70,19 @@ async function updateRegisterInfo (req: Request) {
   let timestamp: string = data.timestamp
   let public_key: string = data.public_key
 
-  let centicUserCheck: ICenticUser | null = await CenticUser.findOne({public_key: public_key})
+  let cryptoScanUserCheck: ICryptoScanUser | null = await CryptoScanUser.findOne({public_key: public_key})
 
-  if (centicUserCheck == null) {
+  if (cryptoScanUserCheck == null) {
     try{
-      let newCenticUser = new CenticUser({
+      let newcryptoScanUser = new CryptoScanUser({
         balance: balance,
         timestamp: timestamp,
         public_key: public_key
       })
 
-      await newCenticUser.save();
+      await newcryptoScanUser.save();
 
-      return await CenticUser.findOne({public_key: public_key})
+      return await CryptoScanUser.findOne({public_key: public_key})
     } 
     catch(err) {
       console.log(err)
@@ -90,7 +90,7 @@ async function updateRegisterInfo (req: Request) {
   }  
   else {
     try {
-      let centicUser: ICenticUser | null = await CenticUser.findOneAndUpdate({public_key: public_key}, {
+      let cryptoScanUser: ICryptoScanUser| null = await CryptoScanUser.findOneAndUpdate({public_key: public_key}, {
         balance: balance,
         timestamp: timestamp,
       }, {new: true})
@@ -98,7 +98,7 @@ async function updateRegisterInfo (req: Request) {
         balance: balance,
         timestamp: timestamp,
       }, {new: true})
-      return centicUser
+      return cryptoScanUser
     }
     catch (err) {
       console.log(err)
@@ -269,9 +269,9 @@ async function getRegisterInfo(req: Request) {
   let data: any = req.body
   let public_key: string = data.public_key
 
-  let centicUserCheck: ICenticUser | null = await CenticUser.findOne({public_key: public_key})
+  let cryptoScanUserCheck: ICryptoScanUser | null = await CryptoScanUser.findOne({public_key: public_key})
 
-  return centicUserCheck
+  return cryptoScanUserCheck
 }
 
 async function provideAuthHash(req: Request) {
@@ -280,21 +280,21 @@ async function provideAuthHash(req: Request) {
   let public_key: string = data.public_key
   let mimc = await mimc7()
 
-  let centicUserCheck: ICenticUser | null = await CenticUser.findOne({public_key: public_key})
+  let cryptoScanUserCheck: ICryptoScanUser| null = await CryptoScanUser.findOne({public_key: public_key})
   let userCachedCheck: IUserCached | null = await UserCached.findOne({public_key: public_key})
   let userLeafCheck: IUserLeaf | null = await UserLeaf.findOne({public_key: public_key})
 
-  if (centicUserCheck != null && userCachedCheck == null && userLeafCheck == null) {
+  if (cryptoScanUserCheck != null && userCachedCheck == null && userLeafCheck == null) {
     try {
       let user_cached_num = await getNumberOfUserCached()
 
-      let hash = mimc.multiHash([auth_hash, centicUserCheck.balance, centicUserCheck.timestamp], 0)
+      let hash = mimc.multiHash([auth_hash, cryptoScanUserCheck.balance, cryptoScanUserCheck.timestamp], 0)
       hash = mimc.F.toObject(hash).toString()
       let newUserCached = new UserCached({
         _id: user_cached_num + 1,
         auth_hash: auth_hash,
-        balance: centicUserCheck.balance,
-        timestamp: centicUserCheck.timestamp,
+        balance: cryptoScanUserCheck.balance,
+        timestamp: cryptoScanUserCheck.timestamp,
         hash: hash,
         public_key: public_key
       })
@@ -309,7 +309,7 @@ async function provideAuthHash(req: Request) {
     } catch (err) {
       console.log("Provice Auth Hash fail", console.log(err))
     }
-  } else if (centicUserCheck == null) {
+  } else if (cryptoScanUserCheck == null) {
     throw Error("User has to register before provide Authentication Hash!")
   } else {
     throw Error("User already provide Authentication Hash before!")

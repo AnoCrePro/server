@@ -1,5 +1,5 @@
 import {Request, Response} from "express";
-import { register, provideAuthHash, buildMerkleTree, convertCachedToLeaf, getInfo, getRegisterInfo, updateRegisterInfo, checkUserLeaf } from "../controllers/centicUserControllers";
+import { register, provideAuthHash, buildMerkleTree, convertCachedToLeaf, getInfo, getRegisterInfo, updateRegisterInfo, checkUserLeaf } from "../controllers/cryptoScanUserControllers";
 
 const express = require("express")
 const router = express.Router();
@@ -9,7 +9,7 @@ router.post("/register/", async(req: Request, res: Response) => {
     var resData = await register(req)
     return res.status(201).json(resData)
   } catch (err) {
-    console.log("Error: POST /centic/user/register/", err)
+    console.log("Error: POST /cryptoscan/user/register/", err)
     return res.status(404).json({err: (err as Error).message})
   }
 })
@@ -19,7 +19,7 @@ router.post("/registerInfo/", async(req: Request, res: Response) => {
     var resData = await getRegisterInfo(req)
     return res.status(201).json(resData)
   } catch (err) {
-    console.log("Error: POST /centic/user/registerInfo/", err)
+    console.log("Error: POST /cryptoscan/user/registerInfo/", err)
     return res.status(201).json({err: (err as Error).message})
   }
 })
@@ -29,7 +29,7 @@ router.post("/updateRegisterInfo/", async(req: Request, res: Response) => {
     var resData = await updateRegisterInfo(req)
     return res.status(201).json(resData)
   } catch (err) {
-    console.log("Error: POST /centic/user/updateRegisterInfo/", err)
+    console.log("Error: POST /cryptoscan/user/updateRegisterInfo/", err)
     return res.status(404).json({err: (err as Error).message})
   }
 })
@@ -39,7 +39,7 @@ router.post("/provideAuthHash/", async(req: Request, res: Response) => {
     var resData = await provideAuthHash(req)
     return res.status(201).json(resData)
   } catch (err) {
-    console.log("Error: POST /centic/user/provideAuthHash/", err)
+    console.log("Error: POST /cryptoscan/user/provideAuthHash/", err)
     return res.status(404).json({err: (err as Error).message})
   }
 })
@@ -49,7 +49,7 @@ router.post("/info/", async(req: Request, res: Response) => {
     var resData = await getInfo(req)
     return res.status(201).json(resData)
   } catch (err) {
-    console.log("Error: POST /centic/user/info/", err)
+    console.log("Error: POST /cryptoscan/user/info/", err)
     return res.status(404).json({err: (err as Error).message})
   }
 })
@@ -60,7 +60,7 @@ router.post("/checkUserLeaf/", async(req: Request, res: Response) => {
     var resData = await checkUserLeaf(req)
     return res.status(201).json(resData)
   } catch (err) {
-    console.log("Error: POST /centic/user/checkUserLeaf/", err)
+    console.log("Error: POST /cryptoscan/user/checkUserLeaf/", err)
     return res.status(404).json({err: (err as Error).message})
   }
 })
@@ -70,7 +70,7 @@ router.post("/test/", async(req: Request, res: Response) => {
     var resData = await buildMerkleTree()
     return res.status(201).json(resData)
   } catch (err) {
-    console.log("Error: POST /centic/user/test/", err)
+    console.log("Error: POST /cryptoscan/user/test/", err)
     return res.status(404).json({err: (err as Error).message})
   }
 })
@@ -80,9 +80,9 @@ router.post("/test2/", async(req: Request, res: Response) => {
     var resData = await convertCachedToLeaf()
     return res.status(201).json(resData)
   } catch (err) {
-    console.log("Error: POST /centic/user/test/", err)
+    console.log("Error: POST /cryptoscan/user/test/", err)
     return res.status(404).json({err: (err as Error).message})
   }
 })
 
-export { router as centicUserRouter}
+export { router as cryptoScanUserRouter}

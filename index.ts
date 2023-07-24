@@ -1,6 +1,6 @@
 import * as dotenv from "dotenv";
 import { connectMongoDB } from "./connect";
-import { centicUserRouter } from "./src/routes/centicUserRouter";
+import { cryptoScanUserRouter } from "./src/routes/cryptoScanUserRouter";
 import { merkleTreeRouter } from "./src/routes/merkleTreeRouter";
 import { bankUserRouter } from "./src/routes/bankUserRouter";
 
@@ -13,8 +13,8 @@ const port = process.env.PORT;
 
 app.use(json());
 app.use(cors());
-app.use("/centic/user", centicUserRouter);
-app.use("/centic/merkletree", merkleTreeRouter);
+app.use("/cryptoscan/user", cryptoScanUserRouter);
+app.use("/cryptoscan/merkletree", merkleTreeRouter);
 app.use("/bank/user", bankUserRouter);
 
 app.get("/", async (req: any, res: any) => {
