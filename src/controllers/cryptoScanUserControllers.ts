@@ -137,7 +137,7 @@ async function convertCachedToLeaf() {
       console.log("User Leaf " + data.public_key + " is existed!")
     }
   })
-  // await UserCached.deleteMany({})
+  await UserCached.deleteMany({})
   let msg = await buildMerkleTree()
   let timeTaken = Date.now() - start;
   console.log(timeTaken)
@@ -301,9 +301,7 @@ async function provideAuthHash(req: Request) {
 
       await newUserCached.save()
 
-      // if(user_cached_num + 1 >= 1) {
-      //   convertCachedToLeaf()
-      // }
+      convertCachedToLeaf()
 
       return await UserCached.findOne({public_key: public_key})
     } catch (err) {
